@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">BosCloner</string>
+    <string name="action_refresh">refresh</string>
+    <string name="action_clear">refresh</string>
+    <string name="action_status">status</string>
+    <string name="action_history">history</string>
+    <string name="connect">connect</string>
+    <string name="disconnect">disconnect</string>
+    <string name="clone_button">Enable clone</string>
+    <string name="no_device">no device</string>
+    <string name="select_device">select device</string>
+    <string name="loading">Loading ...</string>
+    <string name="error">error</string>
+    <string name="confirm_clone_dialog_msg">Press ok to confirm card clone</string>
+    <string name="confirm_clone_dialog_title">Confirm clone</string>
+    <string name="disconnected_msg">Cloner was disconnected</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+</resources>
