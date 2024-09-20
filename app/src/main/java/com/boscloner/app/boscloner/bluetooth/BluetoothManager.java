@@ -6,6 +6,8 @@ import android.content.Context;
 import android.os.ParcelUuid;
 import android.util.Log;
 
+import com.boscloner.app.boscloner.decoder.WiegandDecoder;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -18,6 +20,10 @@ import java.util.UUID;
  * Created by jpiat on 10/15/15.
  */
 public class BluetoothManager implements IBluetoothManager {
+    private static final String LOG_TAG = "BosCloner_BT";
+    private StringBuilder dataBuffer = new StringBuilder();
+    private static final String SCAN_START = "$!SCAN";
+    private static final String SCAN_END = "?$";
 
     private Context manager_context ;
     private BluetoothDevice manager_device ;
@@ -194,6 +200,11 @@ public class BluetoothManager implements IBluetoothManager {
                                     break ;
                                 }
                                 byte [] reduced = Arrays.copyOfRange(data_array, 0, nbRead);
+
+                                //Log Debugging
+                                logReceivedData(reduced); // adb logcat -s BluetoothManager
+                                parseAndDisplayData(reduced); // adb logcat -s BosCloner_BT
+
                                 Log.e(this.getClass().getName(), new String(reduced));
                                 callBack.onDataRead(reduced);
                                 Thread.sleep(1);
@@ -213,6 +224,95 @@ public class BluetoothManager implements IBluetoothManager {
             Log.e(this.getClass().getName(), e.getMessage());
             return false ;
         }
+    }
+
+    private void parseAndDisplayData(byte[] data) {
+        String asciiString = bytesToAscii(data);
+        String hexString = bytesToHex(data);
+        Log.d(LOG_TAG, "Received Raw Data (ASCII): " + asciiString);
+        Log.d(LOG_TAG, "Received Raw Data (Hex): " + hexString);
+
+        dataBuffer.append(asciiString);
+
+        if (dataBuffer.toString().contains(SCAN_START) && dataBuffer.toString().contains(SCAN_END)) {
+            processCompleteRead();
+        }
+    }
+
+    private void processCompleteRead() {
+        String fullData = dataBuffer.toString();
+        int startIndex = fullData.lastIndexOf(SCAN_START);
+        int endIndex = fullData.lastIndexOf(SCAN_END);
+
+        if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+            String cardData = fullData.substring(startIndex + SCAN_START.length(), endIndex);
+            Log.i(LOG_TAG, "Complete Card Data: " + cardData);
+
+            // Extract the 5-byte hex data
+            String[] parts = cardData.split(",");
+            if (parts.length > 1) {
+                String hexData = parts[1].replaceAll(":", "");
+                if (hexData.length() == 10) {  // 5 bytes = 10 hex characters
+                    byte[] decodedHex = hexStringToByteArray(hexData);
+                    decodeCardData(decodedHex);
+                } else {
+                    Log.e(LOG_TAG, "Invalid hex data length: " + hexData);
+                }
+            }
+        }
+    }
+
+    private void decodeCardData(byte[] data) {
+        String hexString = bytesToHex(data);
+        Log.i(LOG_TAG, "Received Raw Data (Hex): " + hexString);
+
+        try {
+            WiegandDecoder.DecodedCard decodedCard = WiegandDecoder.decode(data);
+            if (decodedCard != null) {
+                Log.i(LOG_TAG, "Decoded Card: " + decodedCard.toString());
+            } else {
+                Log.i(LOG_TAG, "Unable to decode card. Unknown format.");
+            }
+        } catch (IllegalArgumentException e) {
+            Log.e(LOG_TAG, "Error decoding card: " + e.getMessage());
+        }
+    }
+
+    private static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
+
+    private void logReceivedData(byte[] data) {
+        String hexString = bytesToHex(data);
+        String asciiString = bytesToAscii(data);
+        Log.d("BluetoothManager", "Received Raw Data (Hex): " + hexString);
+        Log.d("BluetoothManager", "Received Raw Data (ASCII): " + asciiString);
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString().trim();
+    }
+
+    private static String bytesToAscii(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            if (b >= 32 && b < 127) {
+                sb.append((char) b);
+            } else {
+                sb.append('.');
+            }
+        }
+        return sb.toString();
     }
 
     @Override
