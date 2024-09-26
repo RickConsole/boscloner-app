@@ -21,6 +21,7 @@ import java.util.UUID;
  */
 public class BluetoothManager implements IBluetoothManager {
     private static final String LOG_TAG = "BosCloner_BT";
+    private WiegandDecoder.CardFormat selectedFormat = WiegandDecoder.CardFormat.BIT_26; // Default to 26-bit
     private StringBuilder dataBuffer = new StringBuilder();
     private static final String SCAN_START = "$!SCAN";
     private static final String SCAN_END = "?$";
@@ -262,16 +263,22 @@ public class BluetoothManager implements IBluetoothManager {
         }
     }
 
+    public void setCardFormat(WiegandDecoder.CardFormat format) {
+        this.selectedFormat = format;
+    }
+
     private void decodeCardData(byte[] data) {
         String hexString = bytesToHex(data);
         Log.i(LOG_TAG, "Received Raw Data (Hex): " + hexString);
+        Log.i(LOG_TAG, "Received Raw Data (Binary): " + bytesToBinary(data));
 
         try {
-            WiegandDecoder.DecodedCard decodedCard = WiegandDecoder.decode(data);
+            WiegandDecoder.DecodedCard decodedCard = WiegandDecoder.decode(data, selectedFormat);
             if (decodedCard != null) {
-                Log.i(LOG_TAG, "Decoded Card: " + decodedCard.toString());
+                Log.i(LOG_TAG, "Successfully decoded card: " + decodedCard.toString());
+                // Here you can add code to update UI or notify other parts of your app
             } else {
-                Log.i(LOG_TAG, "Unable to decode card. Unknown format.");
+                Log.i(LOG_TAG, "Unable to decode card. Selected format: " + selectedFormat);
             }
         } catch (IllegalArgumentException e) {
             Log.e(LOG_TAG, "Error decoding card: " + e.getMessage());
@@ -293,6 +300,14 @@ public class BluetoothManager implements IBluetoothManager {
         String asciiString = bytesToAscii(data);
         Log.d("BluetoothManager", "Received Raw Data (Hex): " + hexString);
         Log.d("BluetoothManager", "Received Raw Data (ASCII): " + asciiString);
+    }
+
+    private String bytesToBinary(byte[] bytes) {
+        StringBuilder binary = new StringBuilder();
+        for (byte b : bytes) {
+            binary.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+        }
+        return binary.toString();
     }
 
     private static String bytesToHex(byte[] bytes) {

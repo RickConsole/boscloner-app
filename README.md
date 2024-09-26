@@ -1,9 +1,11 @@
 # BosCloner
 Updated + Improved app for BosCloner
 
-This is using the v1.1 version of BosCloner that supports modern BLE hardware. 
+This app is based on the v1.1 version of BosCloner that supports modern BLE hardware. 
 
 ## Improvements
-To make the cloner more compatible with other cloning tools, the history page has been modified to now display the facility code and card number when a scan is clicked.
+To make the cloner more compatible with other cloning tools, the history page has been modified to now display the facility code and card number via decoding the hex dump sent from the boscloner.
 
-![BosCloner Mod](./boscloner-mod.PNG)
+![Select Card View](./media/select_card.png)
+
+![Decoded Data](./media/decoded.png)

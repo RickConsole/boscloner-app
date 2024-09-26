@@ -16,4 +16,8 @@
     <string name="disconnected_msg">Cloner was disconnected</string>
     <string name="ok">Ok</string>
     <string name="cancel">Cancel</string>
+    <string-array name="card_types">
+        <item>26-bit (H10301)</item>
+        <item>35-bit (Corporate 1000)</item>
+    </string-array>
 </resources>
