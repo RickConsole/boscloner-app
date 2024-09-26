@@ -119,18 +119,32 @@ public class HistoryActivity extends AppCompatActivity implements AdapterView.On
         spinner.setAdapter(adapter);
 
         builder.setTitle("Select Card Type")
-                .setPositiveButton("Decode", null)  // Set to null here
+                .setPositiveButton("Decode", null)
                 .setNegativeButton("Cancel", null);
 
         final AlertDialog dialog = builder.create();
         dialog.show();
 
-        // Set the click listener after showing the dialog
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                WiegandDecoder.CardFormat format = spinner.getSelectedItemPosition() == 0 ?
-                        WiegandDecoder.CardFormat.BIT_26 : WiegandDecoder.CardFormat.BIT_35;
+                WiegandDecoder.CardFormat format;
+                switch (spinner.getSelectedItemPosition()) {
+                    case 0:
+                        format = WiegandDecoder.CardFormat.BIT_26;
+                        break;
+                    case 1:
+                        format = WiegandDecoder.CardFormat.BIT_33;
+                        break;
+                    case 2:
+                        format = WiegandDecoder.CardFormat.BIT_34;
+                        break;
+                    case 3:
+                        format = WiegandDecoder.CardFormat.BIT_35;
+                        break;
+                    default:
+                        format = WiegandDecoder.CardFormat.BIT_26;
+                }
                 decodeAndShowResult(event, format);
                 dialog.dismiss();
             }

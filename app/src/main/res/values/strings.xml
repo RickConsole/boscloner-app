@@ -17,7 +17,9 @@
     <string name="ok">Ok</string>
     <string name="cancel">Cancel</string>
     <string-array name="card_types">
-        <item>26-bit (H10301)</item>
-        <item>35-bit (Corporate 1000)</item>
+        <item>26-bit Standard</item>
+        <item>33-bit HID Generic</item>
+        <item>34-bit HID Generic</item>
+        <item>35-bit HID Corporate 1000</item>
     </string-array>
 </resources>

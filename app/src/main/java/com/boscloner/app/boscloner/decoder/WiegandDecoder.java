@@ -7,6 +7,8 @@ public class WiegandDecoder {
 
     public enum CardFormat {
         BIT_26,
+        BIT_33,
+        BIT_34,
         BIT_35
     }
 
@@ -23,8 +25,7 @@ public class WiegandDecoder {
 
         @Override
         public String toString() {
-            return "Format: " + format + ", Card Number: " + cardNumber +
-                    (facilityCode != -1 ? ", Facility Code: " + facilityCode : "");
+            return "Format: " + format + ", Facility Code: " + facilityCode + ", Card Number: " + cardNumber;
         }
     }
 
@@ -33,18 +34,21 @@ public class WiegandDecoder {
             throw new IllegalArgumentException("Input must be 5 bytes long");
         }
 
-        long fullCode = bytesToLong(data);
-        String binaryString = String.format("%40s", Long.toBinaryString(fullCode)).replace(' ', '0');
+        long code = bytesToLong(data);
+        String binaryString = String.format("%40s", Long.toBinaryString(code)).replace(' ', '0');
         Log.d(LOG_TAG, "Full binary (40 bits): " + binaryString);
 
         switch (format) {
             case BIT_26:
-                return decode26Bit(fullCode);
+                return decode26Bit(code);
+            case BIT_33:
+                return decode33Bit(code);
+            case BIT_34:
+                return decode34Bit(code);
             case BIT_35:
-                return decode35Bit(fullCode);
+                return decode35Bit(code);
             default:
-                Log.d(LOG_TAG, "Unsupported format");
-                return null;
+                throw new IllegalArgumentException("Unsupported format: " + format);
         }
     }
 
@@ -54,6 +58,24 @@ public class WiegandDecoder {
         int cardNumber = (int)((bits26 >> 1) & 0xFFFF);
         Log.d(LOG_TAG, "26-bit decode result: Facility Code: " + facilityCode + ", Card Number: " + cardNumber);
         return new DecodedCard("26-bit H10301", cardNumber, facilityCode);
+    }
+
+    private static DecodedCard decode33Bit(long code) {
+        // Extract the last 33 bits
+        long bits33 = code & 0x1FFFFFFF;
+        int facilityCode = (int)((bits33 >> 26) & 0x7F);
+        long cardNumber = (bits33 >> 1) & 0x3FFFFFF;
+        Log.d(LOG_TAG, "33-bit decode result: Facility Code: " + facilityCode + ", Card Number: " + cardNumber);
+        return new DecodedCard("33-bit HID Generic", cardNumber, facilityCode);
+    }
+
+    private static DecodedCard decode34Bit(long code) {
+        // Extract the last 34 bits
+        long bits34 = code & 0x3FFFFFFF;
+        int facilityCode = (int)((bits34 >> 17) & 0xFFFF);
+        long cardNumber = (bits34 >> 1) & 0xFFFF;
+        Log.d(LOG_TAG, "34-bit decode result: Facility Code: " + facilityCode + ", Card Number: " + cardNumber);
+        return new DecodedCard("34-bit HID Generic", cardNumber, facilityCode);
     }
 
     private static DecodedCard decode35Bit(long code) {
